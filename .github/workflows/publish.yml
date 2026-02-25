@@ -21,7 +21,7 @@ jobs:
           scope: ''
 
       - name: Install dependencies
-        run: npm ci
+        run: npm i
 
       - name: Run build
         run: npm run build
