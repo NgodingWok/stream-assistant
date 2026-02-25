@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // Get input flag
 const args = process.argv.slice(2);
 
