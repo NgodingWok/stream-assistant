@@ -1,6 +1,6 @@
 {
   "name": "stream-assistant",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "An interactive stream assistant CLI built with Node.js. Powered by TikTok-Live-Connector.",
   "main": "src/index.js",
   "bin": {
