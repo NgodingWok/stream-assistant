@@ -1,33 +1,27 @@
-name: Publish Package
+name: Release
 
 on:
-  push:
-    branches:
-      - main
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   publish:
-    name: Publish to npm
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Use Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
-          registry-url: https://registry.npmjs.org/
-          scope: ''
-
-      - name: Install dependencies
-        run: npm i
-
-      # - name: Run build
-      #   run: npm run build
-
-      - name: Publish package
+          node-version: '24.x'
+          registry-url: 'https://registry.npmjs.org'
+      
+      - run: npm install
+      
+      - run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          npm publish --access public
