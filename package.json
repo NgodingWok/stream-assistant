@@ -1,0 +1,27 @@
+{
+  "name": "stream-assistant",
+  "version": "1.0.0",
+  "description": "An interactive stream assistant built with Node.js. Powered by TikTok-Live-Connector.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NgodingWok/stream-assistant.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/NgodingWok/stream-assistant/issues"
+  },
+  "homepage": "https://github.com/NgodingWok/stream-assistant#readme",
+  "dependencies": {
+    "consola": "^3.4.2",
+    "gtts": "^0.2.1",
+    "sound-play": "^1.1.0",
+    "tiktok-live-connector": "^2.1.1-beta1"
+  }
+}
