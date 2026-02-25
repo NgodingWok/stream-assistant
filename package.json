@@ -1,18 +1,28 @@
 {
   "name": "stream-assistant",
   "version": "1.0.0",
-  "description": "An interactive stream assistant built with Node.js. Powered by TikTok-Live-Connector.",
+  "description": "An interactive stream assistant CLI built with Node.js. Powered by TikTok-Live-Connector.",
   "main": "src/index.js",
+  "bin": {
+    "stream-assistant": "src/index.js"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "echo \"No build step for this CLI package\"",
+    "prepublishOnly": "npm test"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/NgodingWok/stream-assistant.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "tiktok",
+    "assistant",
+    "cli",
+    "stream"
+  ],
+  "author": "NgodingWok",
+  "license": "MIT",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/NgodingWok/stream-assistant/issues"
