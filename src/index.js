@@ -1,7 +1,11 @@
 #!/usr/bin/env node
+const consola = require("consola");
 
 // Get input flag
 const args = process.argv.slice(2);
+
+// Deprecated warning
+consola.warn("This project is deprecated and no longer maintained. Visit https://github.com/NgodingWok/stream-assistant for more information.");
 
 (async () => {
   // Handle flag

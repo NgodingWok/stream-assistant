@@ -2,6 +2,9 @@
 
 An interactive stream assistant and CLI tool built with Node.js. It integrates [with tiktok-live-connector](https://github.com/zerodytrash/TikTok-Live-Connector) to listening the chat events and uses gTTS (text-to-speech) for audio feedback.
 
+> [!WARNING]
+> This project is deprecated and no longer maintained. Visit [the GitHub repository](https://github.com/NgodingWok/stream-assistant) for more information.
+
 ## Features
 
 - Command-line interface executable (`stream-assistant`)
