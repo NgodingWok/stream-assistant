@@ -37,3 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Added shebang to `src/index.js` for proper CLI execution on all platforms
 - Updated package test script to avoid publish failures
 - Documentation and workflow improvements
+
+## [1.0.4] - 2026-03-04
+### Changed
+* Updated README and index.js to reflect project deprecation status
