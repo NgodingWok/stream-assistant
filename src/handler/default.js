@@ -17,7 +17,8 @@ async function execute(args) {
   }
 
   if (!username) {
-    throw new Error("Username is required. Usage: stream-assistant <username> | see --help for more information.");
+    consola.error("Username is required. Usage: stream-assistant <username> | see --help for more information.");
+    return;
   }
 
   console.log("Default command executed.");
