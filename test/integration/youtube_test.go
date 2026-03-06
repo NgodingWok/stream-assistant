@@ -4,7 +4,6 @@ package integration
 
 import (
 	"context"
-	"os/exec"
 	"testing"
 	"time"
 
@@ -30,17 +29,10 @@ func TestYouTube_SearchEmpty(t *testing.T) {
 }
 
 func TestYouTube_Play(t *testing.T) {
-	if _, err := exec.LookPath("yt-dlp"); err != nil {
-		t.Skip("yt-dlp not installed, skipping playback test")
-	}
-	if _, err := exec.LookPath("ffplay"); err != nil {
-		t.Skip("ffplay not installed, skipping playback test")
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	err := youtube.Play(ctx, "dQw4w9WgXcQ", 30*time.Second)
+	err := youtube.Play(ctx, "sVx1mJDeUjY", 30*time.Second)
 	if err != nil && ctx.Err() == nil {
 		t.Fatalf("Play failed: %v", err)
 	}
