@@ -1,39 +1,35 @@
-# dependencies (bun install)
-node_modules
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/bin/
 
-# output
-out
-dist
-*.tgz
+# Go test binary
+*.test
 
-# code coverage
-coverage
-*.lcov
+# Go coverage
+*.out
+coverage/
 
-# logs
-logs
-_.log
-report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+# TTS temp files
+.tmp/
+
+# Vendor (if not committed)
+# /vendor/
 
 # dotenv environment variable files
 .env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
+.env.*
+!.env.example
 
-# caches
-.eslintcache
-.cache
-*.tsbuildinfo
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 
-# IntelliJ based IDEs
-.idea
-
-# Finder (MacOS) folder config
+# OS
 .DS_Store
-
-# lockfiles
-package-lock.json
-yarn.lock
-bun.lock
+Thumbs.db
