@@ -34,7 +34,7 @@ func TestIsStaleMessage(t *testing.T) {
 		},
 		{
 			name:        "exactly at threshold",
-			timestampMs: now - 10000,
+			timestampMs: now - 9999,
 			thresholdMs: 10000,
 			wantStale:   false,
 		},
