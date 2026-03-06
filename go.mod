@@ -4,6 +4,8 @@ go 1.25.0
 
 require (
 	fyne.io/fyne/v2 v2.7.3
+	github.com/hajimehoshi/go-mp3 v0.3.4
+	github.com/hajimehoshi/oto/v2 v2.4.3
 	github.com/hegedustibor/htgo-tts v0.0.0-20240912200108-467b3e535435
 	github.com/steampoweredtaco/gotiktoklive v0.0.4
 )
@@ -32,8 +34,6 @@ require (
 	github.com/google/pprof v0.0.0-20250208200701-d0013a598941 // indirect
 	github.com/hack-pad/go-indexeddb v0.3.2 // indirect
 	github.com/hack-pad/safejs v0.1.0 // indirect
-	github.com/hajimehoshi/go-mp3 v0.3.4 // indirect
-	github.com/hajimehoshi/oto/v2 v2.4.3 // indirect
 	github.com/jeandeaual/go-locale v0.0.0-20250612000132-0ef82f21eade // indirect
 	github.com/jsummers/gobmp v0.0.0-20230614200233-a9de23ed2e25 // indirect
 	github.com/kr/text v0.2.0 // indirect

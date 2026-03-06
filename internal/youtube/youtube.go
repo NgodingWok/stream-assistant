@@ -16,12 +16,25 @@ import (
 	"regexp"
 	"runtime"
 	"sort"
+	"sync"
 	"time"
+
+	mp3 "github.com/hajimehoshi/go-mp3"
+	"github.com/hajimehoshi/oto/v2"
 
 	ytdlp "NgodingWok/stream-assistant/third_party"
 )
 
 var videoIDPattern = regexp.MustCompile(`watch\?v=([A-Za-z0-9_-]{11})`)
+
+// oto audio context is initialized once per process.
+// Creating multiple oto contexts is not supported; the singleton is shared
+// across all native playback calls.
+var (
+	otoOnce sync.Once
+	otoCtx  *oto.Context
+	otoErr  error
+)
 
 // android_vr (Oculus Quest) InnerTube client constants.
 // android_vr produces stream URLs that YouTube CDN accepts without restriction,
@@ -194,6 +207,7 @@ func tryResolveVRAudioURL(ctx context.Context, videoID, visitorData string) (str
 // This is the fallback when the InnerTube approach fails due to bot detection,
 // since yt-dlp handles YouTube's authentication challenges internally.
 // Uses the system yt-dlp if available; otherwise falls back to the embedded binary.
+// Requests MP3 output (requires ffmpeg) for native playback via go-mp3 + oto.
 func playViaYtDlp(ctx context.Context, videoID string) error {
 	ytdlpPath, err := ytdlp.Executable()
 	if err != nil {
@@ -202,7 +216,7 @@ func playViaYtDlp(ctx context.Context, videoID string) error {
 
 	ytCmd := exec.CommandContext(ctx, ytdlpPath,
 		"--no-playlist",
-		"-f", "bestaudio[ext=m4a]/bestaudio",
+		"-x", "--audio-format", "mp3",
 		"-o", "-",
 		"--quiet",
 		"https://www.youtube.com/watch?v="+videoID,
@@ -217,8 +231,10 @@ func playViaYtDlp(ctx context.Context, videoID string) error {
 		return fmt.Errorf("start yt-dlp: %w", err)
 	}
 
-	playerErr := pipeToPlayer(ctx, pipe)
-	_ = ytCmd.Wait()
+	playerErr := playNative(ctx, pipe)
+	if waitErr := ytCmd.Wait(); waitErr != nil && playerErr == nil {
+		playerErr = waitErr
+	}
 	return playerErr
 }
 
@@ -313,4 +329,41 @@ func pipeToPlayer(ctx context.Context, r io.Reader) error {
 	}
 
 	return fmt.Errorf("no audio player found: install ffplay or mpv")
+}
+
+// playNative decodes an MP3 stream from r and plays it using oto/v2 without
+// requiring any external audio player binary. Stops when ctx is cancelled or
+// playback finishes. The oto audio context is initialized once per process.
+func playNative(ctx context.Context, r io.Reader) error {
+	dec, err := mp3.NewDecoder(r)
+	if err != nil {
+		return fmt.Errorf("decode mp3: %w", err)
+	}
+
+	otoOnce.Do(func() {
+		var ready <-chan struct{}
+		otoCtx, ready, otoErr = oto.NewContext(dec.SampleRate(), 2, oto.FormatSignedInt16LE)
+		if otoErr == nil {
+			<-ready
+		}
+	})
+	if otoErr != nil {
+		return fmt.Errorf("audio context: %w", otoErr)
+	}
+
+	player := otoCtx.NewPlayer(dec)
+	defer player.Close()
+	player.Play()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			if !player.IsPlaying() {
+				return player.Err()
+			}
+			time.Sleep(time.Millisecond)
+		}
+	}
 }
