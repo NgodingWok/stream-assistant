@@ -111,7 +111,7 @@ internal/tts/           Text-to-speech wrapper
 internal/youtube/       YouTube search and audio streaming
 third_party/            Embedded yt-dlp and ffmpeg binary package (build tags: embed_ytdlp, embed_ffmpeg)
 test/integration/       Integration tests (build tag: integration)
-scripts/                Build, test, and fetch-ytdlp shell/bat scripts
+scripts/                Build, test, fetch-ytdlp, and fetch-ffmpeg shell/bat scripts
 ```
 
 ### Running Tests
