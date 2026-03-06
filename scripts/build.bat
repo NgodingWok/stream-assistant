@@ -1,0 +1,88 @@
+@echo off
+:: build.bat — compile stream-assistant on Windows
+::
+:: Usage:
+::   scripts\build.bat [options]
+::
+:: Options:
+::   --embedded        Embed yt-dlp binaries into the output  (requires third_party\bin\)
+::   --output <path>   Output binary path         (default: bin\stream-assistant.exe)
+::   --os <goos>       Target GOOS                (default: windows)
+::   --arch <goarch>   Target GOARCH              (default: current arch)
+::   --version <ver>   Embed version string in binary via ldflags
+::   --race            Enable race detector
+::   --help            Show this message
+
+setlocal EnableDelayedExpansion
+
+cd /d "%~dp0\.."
+
+set OUTPUT=bin\stream-assistant.exe
+set EMBED=0
+set GOOS=
+set GOARCH=
+set VERSION=
+set RACE=0
+
+:parse
+if "%~1"=="" goto :build
+if /i "%~1"=="--embedded"  ( set EMBED=1 & shift & goto :parse )
+if /i "%~1"=="--output"    ( set OUTPUT=%~2 & shift & shift & goto :parse )
+if /i "%~1"=="--os"        ( set GOOS=%~2 & shift & shift & goto :parse )
+if /i "%~1"=="--arch"      ( set GOARCH=%~2 & shift & shift & goto :parse )
+if /i "%~1"=="--version"   ( set VERSION=%~2 & shift & shift & goto :parse )
+if /i "%~1"=="--race"      ( set RACE=1 & shift & goto :parse )
+if /i "%~1"=="--help"      ( goto :usage )
+echo Unknown option: %~1 >&2
+exit /b 1
+
+:usage
+echo Usage:  scripts\build.bat [options]
+echo.
+echo Options:
+echo   --embedded        Embed yt-dlp binaries into the output
+echo   --output ^<path^>   Output binary path      (default: bin\stream-assistant.exe)
+echo   --os ^<goos^>       Target GOOS             (default: windows)
+echo   --arch ^<goarch^>   Target GOARCH           (default: current arch)
+echo   --version ^<ver^>   Embed version string in binary via ldflags
+echo   --race            Enable race detector
+echo   --help            Show this message
+exit /b 0
+
+:build
+set TAGS=
+if "%EMBED%"=="1" (
+  if not exist "third_party\bin" (
+    echo error: third_party\bin\ not found - run scripts\fetch-ytdlp.bat first >&2
+    exit /b 1
+  )
+  set TAGS=-tags embed_ytdlp
+)
+
+set LDFLAGS=
+if not "%VERSION%"=="" (
+  set LDFLAGS=-ldflags=-X main.version=%VERSION%
+)
+
+set RACE_FLAG=
+if "%RACE%"=="1" set RACE_FLAG=-race
+
+if not "%GOOS%"==""   set GOOS=%GOOS%
+if not "%GOARCH%"=="" set GOARCH=%GOARCH%
+
+echo Building stream-assistant...
+echo   embedded : %EMBED%
+echo   output   : %OUTPUT%
+if "%GOOS%"==""   ( for /f "delims=" %%g in ('go env GOOS')   do echo   GOOS     : %%g )
+if not "%GOOS%"=="" echo   GOOS     : %GOOS%
+if "%GOARCH%"=="" ( for /f "delims=" %%g in ('go env GOARCH') do echo   GOARCH   : %%g )
+if not "%GOARCH%"=="" echo   GOARCH   : %GOARCH%
+if not "%VERSION%"=="" echo   version  : %VERSION%
+
+for %%d in ("%OUTPUT%") do if not exist "%%~dpd" mkdir "%%~dpd"
+
+go build %RACE_FLAG% %TAGS% %LDFLAGS% -o "%OUTPUT%" .\cmd\stream-assistant\
+
+if %ERRORLEVEL% neq 0 ( echo Build failed >&2 & exit /b %ERRORLEVEL% )
+echo Done ^→ %OUTPUT%
+endlocal
