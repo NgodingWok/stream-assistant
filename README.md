@@ -7,7 +7,7 @@ An interactive stream assistant built with [Go](https://go.dev/). Available as a
 
 - Real-time TikTok live stream monitoring with chat event processing
 - Text-to-speech playback for chat messages using [htgo-tts](https://github.com/hegedustibor/htgo-tts) with configurable language
-- YouTube audio playback via `!play <query>` chat command using embedded Go library (requires `ffplay`, `mpv`, or `afplay` for playback)
+- YouTube audio playback via `!play <query>` chat command; primary path uses the android_vr InnerTube client (requires `ffplay`, `mpv`, or `afplay`); yt-dlp fallback uses native go-mp3 + oto/v2 playback (requires `ffmpeg` for yt-dlp transcoding)
 - User join and viewer count logging
 - Graceful shutdown via SIGINT/SIGTERM (CLI) or Stop button (GUI)
 - Runtime configuration through environment variables (CLI) or settings form (GUI)
@@ -16,10 +16,11 @@ An interactive stream assistant built with [Go](https://go.dev/). Available as a
 ## Prerequisites
 
 - Go 1.25+
-- One of the following audio players:
+- For YouTube InnerTube playback (primary path), one of:
   - `ffplay` — part of [FFmpeg](https://ffmpeg.org/) (recommended)
   - `mpv` — cross-platform media player
   - `afplay` — built-in on macOS
+- For the yt-dlp fallback path: `ffmpeg` in PATH (used by yt-dlp to transcode to MP3; playback itself is native via go-mp3 + oto/v2 — no extra player needed)
 
 ## Installation
 

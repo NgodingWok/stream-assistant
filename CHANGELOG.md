@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+* Replaced stdout-pipe streaming in `playViaYtDlp` with file-based download: yt-dlp saves to `<tmpDir>/<videoID>.mp3` then plays natively via go-mp3 + oto/v2 — no external audio player required for the yt-dlp fallback path
+* Added playback cache: if `<videoID>.mp3` already exists in `tmpDir`, yt-dlp download is skipped and the file is played directly
+* `Play()` now accepts a `tmpDir` string parameter (reuses `TTSFolder`) for downloaded audio file storage, matching the TTS pattern
+* yt-dlp fallback path now requires `ffmpeg` in PATH for audio transcoding (`-x --audio-format mp3`)
+* Added oto/v2 context singleton (`sync.Once`) to comply with oto's single-context-per-process constraint
+
 ### Added
 
 * GUI application (`main.go`) built with [Fyne v2](https://fyne.io/) — settings form, scrollable monospace log list (capped at 500 entries), live viewer count binding, status bar, and Start/Stop session control
