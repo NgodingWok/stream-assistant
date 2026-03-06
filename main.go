@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -48,6 +49,10 @@ type streamApp struct {
 	cancel  context.CancelFunc
 	running bool
 	mu      sync.Mutex
+
+	// playCh carries !play queries to the dedicated audio player goroutine.
+	// Created fresh per session; capacity 1 so the newest request always wins.
+	playCh chan string
 }
 
 func main() {
@@ -190,6 +195,10 @@ func (sa *streamApp) runSession(ctx context.Context, username string) {
 
 	speaker := tts.NewSpeaker(ttsLang, ttsFolder)
 
+	// create the player channel and start the dedicated audio goroutine
+	sa.playCh = make(chan string, 1)
+	go sa.runPlayer(ctx, playTimeout, ttsFolder)
+
 	// connect
 	tikTok, err := gotiktoklive.NewTikTok()
 	if err != nil {
@@ -284,7 +293,12 @@ func (sa *streamApp) dispatchEvent(
 		if strings.HasPrefix(e.Comment, "!play") {
 			query := strings.TrimSpace(strings.TrimPrefix(e.Comment, "!play"))
 			if query != "" {
-				go sa.handlePlay(ctx, query, playTimeout)
+				// Drain any pending (unprocessed) request so the newest always wins.
+				select {
+				case <-sa.playCh:
+				default:
+				}
+				sa.playCh <- query
 			}
 			return
 		}
@@ -299,17 +313,61 @@ func (sa *streamApp) dispatchEvent(
 	}
 }
 
-func (sa *streamApp) handlePlay(ctx context.Context, query string, timeout time.Duration) {
-	sa.appendLog("[play] searching: " + query)
-	videoID, err := youtube.Search(query)
-	if err != nil {
-		sa.appendLog(fmt.Sprintf("[play] search error: %v", err))
-		return
+// runPlayer is the dedicated audio goroutine started once per session.
+// It processes play requests from playCh sequentially. If a new request arrives
+// while audio is playing, the current playback is cancelled and the new request
+// starts immediately.
+func (sa *streamApp) runPlayer(ctx context.Context, timeout time.Duration, tmpDir string) {
+	var (
+		cancelCurrent context.CancelFunc
+		done          <-chan struct{}
+	)
+
+	for {
+		if done == nil {
+			select {
+			case <-ctx.Done():
+				return
+			case query := <-sa.playCh:
+				cancelCurrent, done = sa.launchPlay(ctx, query, timeout, tmpDir)
+			}
+		} else {
+			select {
+			case <-ctx.Done():
+				cancelCurrent()
+				return
+			case <-done:
+				cancelCurrent()
+				done = nil
+			case query := <-sa.playCh:
+				cancelCurrent()
+				<-done
+				cancelCurrent, done = sa.launchPlay(ctx, query, timeout, tmpDir)
+			}
+		}
 	}
-	sa.appendLog("[play] playing: " + videoID)
-	if err := youtube.Play(ctx, videoID, timeout, sa.ttsFolderEntry.Text); err != nil {
-		sa.appendLog(fmt.Sprintf("[play] error: %v", err))
-	}
+}
+
+// launchPlay starts a playback goroutine for query and returns its cancel func
+// and a done channel that closes when playback finishes or errors.
+func (sa *streamApp) launchPlay(ctx context.Context, query string, timeout time.Duration, tmpDir string) (context.CancelFunc, <-chan struct{}) {
+	playCtx, cancel := context.WithCancel(ctx)
+	ch := make(chan struct{})
+	go func() {
+		defer close(ch)
+		sa.appendLog("[play] searching: " + query)
+		videoID, err := youtube.Search(query)
+		if err != nil {
+			sa.appendLog(fmt.Sprintf("[play] search error: %v", err))
+			return
+		}
+		sa.appendLog("[play] playing: " + videoID)
+		if err := youtube.Play(playCtx, videoID, timeout, tmpDir); err != nil &&
+			!errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+			sa.appendLog(fmt.Sprintf("[play] error: %v", err))
+		}
+	}()
+	return cancel, ch
 }
 
 // appendLog appends a timestamped line to the log list and scrolls to bottom.
