@@ -94,5 +94,5 @@ for %%d in ("%OUTPUT%") do if not exist "%%~dpd" mkdir "%%~dpd"
 go build %RACE_FLAG% %TAGS% %LDFLAGS% -o "%OUTPUT%" %PKG%
 
 if %ERRORLEVEL% neq 0 ( echo Build failed >&2 & exit /b %ERRORLEVEL% )
-echo Done ^→ %OUTPUT%
+echo Done -> %OUTPUT%
 endlocal

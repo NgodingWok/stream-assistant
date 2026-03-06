@@ -86,4 +86,4 @@ mkdir -p "$(dirname "$OUTPUT")"
 # shellcheck disable=SC2086
 go build $RACE_FLAG $TAGS $LDFLAGS -o "$OUTPUT" $PKG
 
-echo "Done → ${OUTPUT}"
+echo "Done -> ${OUTPUT}"
