@@ -8,12 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+* GUI application (`main.go`) built with [Fyne v2](https://fyne.io/) — settings form, scrollable monospace log list (capped at 500 entries), live viewer count binding, status bar, and Start/Stop session control
+* `--gui` flag in `scripts/build.sh` and `scripts/build.bat` — builds the root GUI package (`main.go`) instead of the CLI; defaults output to `bin/stream-assistant-gui[.exe]`; composable with all existing flags (`--embedded`, `--os`, `--arch`, `--version`, `--race`)
+* `build-gui` and `build-gui-embedded` Makefile targets delegating to `scripts/build.sh --gui [--embedded]`
+
 * `scripts/build.sh` and `scripts/build.bat` — cross-platform build scripts with options: `--embedded`, `--output`, `--os`, `--arch`, `--version`, `--race`, `--help`
 * `scripts/test.sh` and `scripts/test.bat` — test runner scripts with options: `--unit`, `--integration`, `--all`, `--coverage`, `--race`, `--run`, `--timeout`, `--verbose`, `--help`
 * `scripts/fetch-ytdlp.sh` and `scripts/fetch-ytdlp.bat` — download yt-dlp release binaries for all supported platforms with options: `--version`, `--dir`, `--platform`
 
 * `third_party/` package (`package ytdlp`) with platform-specific `//go:embed` files for bundling yt-dlp into the output binary at build time using `-tags embed_ytdlp`
-* `Makefile` with `build`, `build-embedded`, `test`, `test-integration`, `test-all`, `fetch-ytdlp`, and `clean` targets delegating to `scripts/`
+* `Makefile` with `build`, `build-embedded`, `build-gui`, `build-gui-embedded`, `test`, `test-integration`, `test-all`, `fetch-ytdlp`, and `clean` targets delegating to `scripts/`
 * Embedded yt-dlp binaries in `third_party/bin/` for Linux amd64, Linux arm64, macOS universal, and Windows amd64
 * `ytdlp.Executable()` function that resolves yt-dlp from system PATH (priority) or extracts the embedded binary to the user cache directory on first use
 

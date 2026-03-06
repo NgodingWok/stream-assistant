@@ -1,6 +1,6 @@
 # stream-assistant
 
-An interactive stream assistant and CLI tool built with [Go](https://go.dev/). It connects to TikTok live streams using [gotiktoklive](https://github.com/steampoweredtaco/gotiktoklive), reads chat messages aloud via google text-to-speech, and plays YouTube audio on demand through chat commands.
+An interactive stream assistant built with [Go](https://go.dev/). Available as a **CLI tool** and a **GUI application** (built with [Fyne](https://fyne.io/)). It connects to TikTok live streams using [gotiktoklive](https://github.com/steampoweredtaco/gotiktoklive), reads chat messages aloud via Google text-to-speech, and plays YouTube audio on demand through chat commands.
 
 
 ## Features
@@ -9,8 +9,9 @@ An interactive stream assistant and CLI tool built with [Go](https://go.dev/). I
 - Text-to-speech playback for chat messages using [htgo-tts](https://github.com/hegedustibor/htgo-tts) with configurable language
 - YouTube audio playback via `!play <query>` chat command using embedded Go library (requires `ffplay`, `mpv`, or `afplay` for playback)
 - User join and viewer count logging
-- Graceful shutdown via SIGINT/SIGTERM
-- Runtime configuration through environment variables
+- Graceful shutdown via SIGINT/SIGTERM (CLI) or Stop button (GUI)
+- Runtime configuration through environment variables (CLI) or settings form (GUI)
+- GUI built with [Fyne](https://fyne.io/) — live log view, viewer count, status bar
 
 ## Prerequisites
 
@@ -41,13 +42,35 @@ make build-embedded
 bash scripts/build.sh --embedded
 ```
 
+**GUI build**:
+```bash
+make build-gui
+# or
+bash scripts/build.sh --gui
+
+# GUI + embedded yt-dlp:
+make build-gui-embedded
+# or
+bash scripts/build.sh --gui --embedded
+```
+
 See `scripts/build.sh --help` for all build options (`--os`, `--arch`, `--version`, `--race`).
 
 ## Usage
 
+### CLI
+
 ```bash
-stream-assistant <tiktok-username>
+./bin/stream-assistant <tiktok-username>
 ```
+
+### GUI
+
+```bash
+./bin/stream-assistant-gui
+```
+
+Fill in the settings form (username, TTS language, chat delay, etc.) and click **Start**.
 
 ### Environment Variables
 
@@ -69,6 +92,7 @@ stream-assistant <tiktok-username>
 
 ```
 cmd/stream-assistant/   CLI entry point
+main.go                 GUI entry point (Fyne)
 internal/config/        Configuration loading from environment variables
 internal/handler/       TikTok event processing and dispatch
 internal/tts/           Text-to-speech wrapper
