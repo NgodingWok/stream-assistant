@@ -1,4 +1,4 @@
-.PHONY: build build-embedded fetch-ytdlp test test-integration test-all clean
+.PHONY: build build-embedded build-gui build-gui-embedded fetch-ytdlp test test-integration test-all clean
 
 ## build: compile without embedded yt-dlp (requires yt-dlp in PATH at runtime)
 build:
@@ -7,6 +7,14 @@ build:
 ## build-embedded: compile with yt-dlp binaries embedded in the output binary
 build-embedded:
 	@bash scripts/build.sh --embedded
+
+## build-gui: compile the GUI binary without embedded yt-dlp
+build-gui:
+	@bash scripts/build.sh --gui
+
+## build-gui-embedded: compile the GUI binary with yt-dlp binaries embedded
+build-gui-embedded:
+	@bash scripts/build.sh --gui --embedded
 
 ## fetch-ytdlp: download yt-dlp binaries for all supported platforms into third_party/bin/
 fetch-ytdlp:

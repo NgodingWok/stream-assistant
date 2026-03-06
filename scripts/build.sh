@@ -5,8 +5,9 @@
 #   ./scripts/build.sh [options]
 #
 # Options:
+#   --gui             Build the GUI binary (root package) instead of the CLI
 #   --embedded        Embed yt-dlp binaries into the output  (requires third_party/bin/)
-#   --output <path>   Output binary path         (default: ./bin/stream-assistant)
+#   --output <path>   Output binary path         (default: ./bin/stream-assistant[-gui])
 #   --os <goos>       Target GOOS                (default: current OS)
 #   --arch <goarch>   Target GOARCH              (default: current arch)
 #   --version <ver>   Embed version string in binary via ldflags
@@ -16,7 +17,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-OUTPUT="./bin/stream-assistant"
+OUTPUT=""
+GUI=0
 EMBED=0
 GOOS="${GOOS:-}"
 GOARCH="${GOARCH:-}"
@@ -25,6 +27,7 @@ RACE=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --gui)       GUI=1 ;;
     --embedded)  EMBED=1 ;;
     --output)    OUTPUT="$2"; shift ;;
     --os)        GOOS="$2"; shift ;;
@@ -38,6 +41,16 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
+
+# Resolve defaults that depend on --gui.
+if [[ $GUI -eq 1 ]]; then
+  PKG="."
+  LABEL="stream-assistant-gui"
+else
+  PKG="./cmd/stream-assistant/"
+  LABEL="stream-assistant"
+fi
+[[ -z "$OUTPUT" ]] && OUTPUT="./bin/${LABEL}"
 
 TAGS=""
 if [[ $EMBED -eq 1 ]]; then
@@ -60,7 +73,8 @@ fi
 
 export GOOS GOARCH
 
-echo "Building stream-assistant..."
+echo "Building ${LABEL}..."
+  echo "  gui      : ${GUI}"
 echo "  embedded : ${EMBED}"
 echo "  output   : ${OUTPUT}"
 echo "  GOOS     : ${GOOS:-$(go env GOOS)}"
@@ -70,6 +84,6 @@ echo "  GOARCH   : ${GOARCH:-$(go env GOARCH)}"
 mkdir -p "$(dirname "$OUTPUT")"
 
 # shellcheck disable=SC2086
-go build $RACE_FLAG $TAGS $LDFLAGS -o "$OUTPUT" ./cmd/stream-assistant/
+go build $RACE_FLAG $TAGS $LDFLAGS -o "$OUTPUT" $PKG
 
 echo "Done → ${OUTPUT}"
