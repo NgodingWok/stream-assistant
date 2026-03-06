@@ -39,7 +39,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
-* Replaced stdout-pipe streaming in `playViaYtDlp` with file-based download: yt-dlp saves to `<tmpDir>/<videoID>.mp3` then plays natively via go-mp3 + oto/v2 — no external audio player required for the yt-dlp fallback path
+* Added `--embed-ffmpeg` build flag to `scripts/build.sh` and `scripts/build.bat`: embeds `ffmpeg.exe` (Windows amd64 only) into the binary using build tag `embed_ffmpeg`; composable with `--embedded` for a fully self-contained Windows binary
+* `playViaYtDlp` now passes `--ffmpeg-location <path>` to yt-dlp when `FFmpegExecutable()` resolves a path (embedded or system), eliminating the PATH requirement on Windows when using `--embed-ffmpeg`
+* `TTS_FOLDER` now serves as the cache directory for both TTS audio files and downloaded YouTube MP3s
+
+### Added
+
+* `third_party/ffmpeg.go` — `FFmpegExecutable()` function following the same pattern as `Executable()`: system PATH first, then embedded binary extracted to user cache on first use
+* `embed_ffmpeg_windows_amd64.go`, `embed_ffmpeg_stub.go`, `embed_ffmpeg_fallback.go` — platform-specific embed files for `embed_ffmpeg` build tag (only Windows amd64 actually embeds; all other platforms use PATH)
+* `scripts/fetch-ffmpeg.sh` and `scripts/fetch-ffmpeg.bat` — download the FFmpeg Windows binary (gpl-essentials, statically linked) from BtbN FFmpeg Builds into `third_party/bin/ffmpeg.exe`
+* `fetch-ffmpeg` Makefile target delegating to `scripts/fetch-ffmpeg.sh`: yt-dlp saves to `<tmpDir>/<videoID>.mp3` then plays natively via go-mp3 + oto/v2 — no external audio player required for the yt-dlp fallback path
 * Added playback cache: if `<videoID>.mp3` already exists in `tmpDir`, yt-dlp download is skipped and the file is played directly
 * `Play()` now accepts a `tmpDir` string parameter (reuses `TTSFolder`) for downloaded audio file storage, matching the TTS pattern
 * yt-dlp fallback path now requires `ffmpeg` in PATH for audio transcoding (`-x --audio-format mp3`)

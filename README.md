@@ -21,6 +21,7 @@ An interactive stream assistant built with [Go](https://go.dev/). Available as a
   - `mpv` — cross-platform media player
   - `afplay` — built-in on macOS
 - For the yt-dlp fallback path: `ffmpeg` in PATH (used by yt-dlp to transcode to MP3; playback itself is native via go-mp3 + oto/v2 — no extra player needed)
+  - On Windows this can be bundled into the binary via `--embed-ffmpeg` (see below)
 
 ## Installation
 
@@ -41,6 +42,16 @@ bash scripts/build.sh
 make build-embedded
 # or
 bash scripts/build.sh --embedded
+```
+
+**Embedded build with FFmpeg for Windows** (bundles both yt-dlp and ffmpeg into the binary):
+```bash
+# 1. fetch the binaries first (only needed once)
+bash scripts/fetch-ytdlp.sh
+bash scripts/fetch-ffmpeg.sh    # downloads ffmpeg.exe from BtbN builds
+
+# 2. build
+bash scripts/build.sh --embedded --embed-ffmpeg
 ```
 
 **GUI build**:
@@ -80,7 +91,7 @@ Fill in the settings form (username, TTS language, chat delay, etc.) and click *
 | `CHAT_DELAY_MS` | `10000` | Ignore chat messages older than this threshold (ms) |
 | `PLAY_TIMEOUT_MIN` | `15` | Maximum duration for YouTube playback (minutes) |
 | `TTS_LANGUAGE` | `id` | Language code for text-to-speech (e.g., `en`, `id`, `es`) |
-| `TTS_FOLDER` | `.tmp` | Directory for generated TTS audio files |
+| `TTS_FOLDER` | `.tmp` | Directory for generated TTS and YouTube audio cache files |
 
 ### Chat Commands
 
@@ -98,7 +109,7 @@ internal/config/        Configuration loading from environment variables
 internal/handler/       TikTok event processing and dispatch
 internal/tts/           Text-to-speech wrapper
 internal/youtube/       YouTube search and audio streaming
-third_party/            Embedded yt-dlp binary package (build tag: embed_ytdlp)
+third_party/            Embedded yt-dlp and ffmpeg binary package (build tags: embed_ytdlp, embed_ffmpeg)
 test/integration/       Integration tests (build tag: integration)
 scripts/                Build, test, and fetch-ytdlp shell/bat scripts
 ```

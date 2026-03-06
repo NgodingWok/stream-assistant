@@ -229,14 +229,19 @@ func playViaYtDlp(ctx context.Context, videoID, tmpDir string) error {
 	// Download and convert to MP3. yt-dlp appends .mp3 when no extension is
 	// present in the -o template, so passing the base path is intentional.
 	outBase := filepath.Join(tmpDir, videoID)
-	ytCmd := exec.CommandContext(ctx, ytdlpPath,
+	args := []string{
 		"--no-playlist",
 		"-x", "--audio-format", "mp3",
 		"-o", outBase,
 		"--quiet",
 		"--no-progress",
-		"https://www.youtube.com/watch?v="+videoID,
-	)
+	}
+	// Point yt-dlp at the embedded ffmpeg when it is not in PATH (Windows).
+	if ffmpegPath, err := ytdlp.FFmpegExecutable(); err == nil {
+		args = append(args, "--ffmpeg-location", ffmpegPath)
+	}
+	args = append(args, "https://www.youtube.com/watch?v="+videoID)
+	ytCmd := exec.CommandContext(ctx, ytdlpPath, args...)
 	ytCmd.Stderr = os.Stderr
 
 	if err := ytCmd.Run(); err != nil {

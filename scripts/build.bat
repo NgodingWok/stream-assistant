@@ -5,14 +5,15 @@
 ::   scripts\build.bat [options]
 ::
 :: Options:
-::   --gui             Build the GUI binary (root package) instead of the CLI
-::   --embedded        Embed yt-dlp binaries into the output  (requires third_party\bin\)
-::   --output <path>   Output binary path         (default: bin\stream-assistant[-gui].exe)
-::   --os <goos>       Target GOOS                (default: windows)
-::   --arch <goarch>   Target GOARCH              (default: current arch)
-::   --version <ver>   Embed version string in binary via ldflags
-::   --race            Enable race detector
-::   --help            Show this message
+::   --gui              Build the GUI binary (root package) instead of the CLI
+::   --embedded         Embed yt-dlp binaries into the output  (requires third_party\bin\)
+::   --embed-ffmpeg     Embed FFmpeg for Windows (requires third_party\bin\ffmpeg.exe)
+::   --output <path>    Output binary path         (default: bin\stream-assistant[-gui].exe)
+::   --os <goos>        Target GOOS                (default: windows)
+::   --arch <goarch>    Target GOARCH              (default: current arch)
+::   --version <ver>    Embed version string in binary via ldflags
+::   --race             Enable race detector
+::   --help             Show this message
 
 setlocal EnableDelayedExpansion
 
@@ -21,6 +22,7 @@ cd /d "%~dp0\.."
 set OUTPUT=
 set GUI=0
 set EMBED=0
+set EMBED_FFMPEG=0
 set GOOS=
 set GOARCH=
 set VERSION=
@@ -28,8 +30,9 @@ set RACE=0
 
 :parse
 if "%~1"=="" goto :build
-if /i "%~1"=="--gui"       ( set GUI=1 & shift & goto :parse )
-if /i "%~1"=="--embedded"  ( set EMBED=1 & shift & goto :parse )
+if /i "%~1"=="--gui"          ( set GUI=1 & shift & goto :parse )
+if /i "%~1"=="--embedded"     ( set EMBED=1 & shift & goto :parse )
+if /i "%~1"=="--embed-ffmpeg" ( set EMBED_FFMPEG=1 & shift & goto :parse )
 if /i "%~1"=="--output"    ( set OUTPUT=%~2 & shift & shift & goto :parse )
 if /i "%~1"=="--os"        ( set GOOS=%~2 & shift & shift & goto :parse )
 if /i "%~1"=="--arch"      ( set GOARCH=%~2 & shift & shift & goto :parse )
@@ -43,8 +46,9 @@ exit /b 1
 echo Usage:  scripts\build.bat [options]
 echo.
 echo Options:
-echo   --gui             Build the GUI binary instead of the CLI
-echo   --embedded        Embed yt-dlp binaries into the output
+echo   --gui              Build the GUI binary instead of the CLI
+echo   --embedded         Embed yt-dlp binaries into the output
+echo   --embed-ffmpeg     Embed FFmpeg for Windows (requires third_party\bin\ffmpeg.exe)
 echo   --output ^<path^>   Output binary path      (default: bin\stream-assistant[-gui].exe)
 echo   --os ^<goos^>       Target GOOS             (default: windows)
 echo   --arch ^<goarch^>   Target GOARCH           (default: current arch)
@@ -59,14 +63,23 @@ set LABEL=stream-assistant
 if "%GUI%"=="1" ( set PKG=. & set LABEL=stream-assistant-gui )
 if "%OUTPUT%"=="" set OUTPUT=bin\%LABEL%.exe
 
-set TAGS=
+set TAG_LIST=
 if "%EMBED%"=="1" (
   if not exist "third_party\bin" (
     echo error: third_party\bin\ not found - run scripts\fetch-ytdlp.bat first >&2
     exit /b 1
   )
-  set TAGS=-tags embed_ytdlp
+  set TAG_LIST=embed_ytdlp
 )
+if "%EMBED_FFMPEG%"=="1" (
+  if not exist "third_party\bin\ffmpeg.exe" (
+    echo error: third_party\bin\ffmpeg.exe not found - run scripts\fetch-ffmpeg.bat first >&2
+    exit /b 1
+  )
+  if "!TAG_LIST!"=="" ( set TAG_LIST=embed_ffmpeg ) else ( set TAG_LIST=!TAG_LIST!,embed_ffmpeg )
+)
+set TAGS=
+if not "!TAG_LIST!"=="" set TAGS=-tags !TAG_LIST!
 
 set LDFLAGS=
 if not "%VERSION%"=="" (
@@ -80,8 +93,9 @@ if not "%GOOS%"==""   set GOOS=%GOOS%
 if not "%GOARCH%"=="" set GOARCH=%GOARCH%
 
 echo Building %LABEL%...
-echo   gui      : %GUI%
-echo   embedded : %EMBED%
+echo   gui          : %GUI%
+echo   embedded     : %EMBED%
+echo   embed-ffmpeg : %EMBED_FFMPEG%
 echo   output   : %OUTPUT%
 if "%GOOS%"==""   ( for /f "delims=" %%g in ('go env GOOS')   do echo   GOOS     : %%g )
 if not "%GOOS%"=="" echo   GOOS     : %GOOS%

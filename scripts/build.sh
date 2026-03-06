@@ -5,14 +5,15 @@
 #   ./scripts/build.sh [options]
 #
 # Options:
-#   --gui             Build the GUI binary (root package) instead of the CLI
-#   --embedded        Embed yt-dlp binaries into the output  (requires third_party/bin/)
-#   --output <path>   Output binary path         (default: ./bin/stream-assistant[-gui])
-#   --os <goos>       Target GOOS                (default: current OS)
-#   --arch <goarch>   Target GOARCH              (default: current arch)
-#   --version <ver>   Embed version string in binary via ldflags
-#   --race            Enable race detector
-#   --help            Show this message
+#   --gui              Build the GUI binary (root package) instead of the CLI
+#   --embedded         Embed yt-dlp binaries into the output  (requires third_party/bin/)
+#   --embed-ffmpeg     Embed FFmpeg for Windows (requires third_party/bin/ffmpeg.exe)
+#   --output <path>    Output binary path         (default: ./bin/stream-assistant[-gui])
+#   --os <goos>        Target GOOS                (default: current OS)
+#   --arch <goarch>    Target GOARCH              (default: current arch)
+#   --version <ver>    Embed version string in binary via ldflags
+#   --race             Enable race detector
+#   --help             Show this message
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -20,6 +21,7 @@ cd "$(dirname "$0")/.."
 OUTPUT=""
 GUI=0
 EMBED=0
+EMBED_FFMPEG=0
 GOOS="${GOOS:-}"
 GOARCH="${GOARCH:-}"
 VERSION=""
@@ -27,13 +29,14 @@ RACE=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --gui)       GUI=1 ;;
-    --embedded)  EMBED=1 ;;
-    --output)    OUTPUT="$2"; shift ;;
-    --os)        GOOS="$2"; shift ;;
-    --arch)      GOARCH="$2"; shift ;;
-    --version)   VERSION="$2"; shift ;;
-    --race)      RACE=1 ;;
+    --gui)           GUI=1 ;;
+    --embedded)      EMBED=1 ;;
+    --embed-ffmpeg)  EMBED_FFMPEG=1 ;;
+    --output)        OUTPUT="$2"; shift ;;
+    --os)            GOOS="$2"; shift ;;
+    --arch)          GOARCH="$2"; shift ;;
+    --version)       VERSION="$2"; shift ;;
+    --race)          RACE=1 ;;
     --help)
       sed -n '/^# Usage/,/^[^#]/{ /^[^#]/d; p }' "$0" | sed 's/^# \?//'
       exit 0 ;;
@@ -52,14 +55,23 @@ else
 fi
 [[ -z "$OUTPUT" ]] && OUTPUT="./bin/${LABEL}"
 
-TAGS=""
+TAG_LIST=""
 if [[ $EMBED -eq 1 ]]; then
   if [[ ! -d "third_party/bin" ]]; then
     echo "error: third_party/bin/ not found — run ./scripts/fetch-ytdlp.sh first" >&2
     exit 1
   fi
-  TAGS="-tags embed_ytdlp"
+  TAG_LIST="embed_ytdlp"
 fi
+if [[ $EMBED_FFMPEG -eq 1 ]]; then
+  if [[ ! -f "third_party/bin/ffmpeg.exe" ]]; then
+    echo "error: third_party/bin/ffmpeg.exe not found — run ./scripts/fetch-ffmpeg.sh first" >&2
+    exit 1
+  fi
+  TAG_LIST="${TAG_LIST:+${TAG_LIST},}embed_ffmpeg"
+fi
+TAGS=""
+[[ -n "$TAG_LIST" ]] && TAGS="-tags ${TAG_LIST}"
 
 LDFLAGS=""
 if [[ -n "$VERSION" ]]; then
@@ -74,8 +86,9 @@ fi
 export GOOS GOARCH
 
 echo "Building ${LABEL}..."
-  echo "  gui      : ${GUI}"
-echo "  embedded : ${EMBED}"
+echo "  gui          : ${GUI}"
+echo "  embedded     : ${EMBED}"
+echo "  embed-ffmpeg : ${EMBED_FFMPEG}"
 echo "  output   : ${OUTPUT}"
 echo "  GOOS     : ${GOOS:-$(go env GOOS)}"
 echo "  GOARCH   : ${GOARCH:-$(go env GOARCH)}"

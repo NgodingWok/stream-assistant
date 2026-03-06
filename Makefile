@@ -1,4 +1,4 @@
-.PHONY: build build-embedded build-gui build-gui-embedded fetch-ytdlp test test-integration test-all clean
+.PHONY: build build-embedded build-gui build-gui-embedded fetch-ytdlp fetch-ffmpeg test test-integration test-all clean
 
 ## build: compile without embedded yt-dlp (requires yt-dlp in PATH at runtime)
 build:
@@ -19,6 +19,10 @@ build-gui-embedded:
 ## fetch-ytdlp: download yt-dlp binaries for all supported platforms into third_party/bin/
 fetch-ytdlp:
 	@bash scripts/fetch-ytdlp.sh
+
+## fetch-ffmpeg: download FFmpeg Windows binary into third_party/bin/ffmpeg.exe
+fetch-ffmpeg:
+	@bash scripts/fetch-ffmpeg.sh
 
 ## test: run unit tests
 test:
