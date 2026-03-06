@@ -307,7 +307,7 @@ func (sa *streamApp) handlePlay(ctx context.Context, query string, timeout time.
 		return
 	}
 	sa.appendLog("[play] playing: " + videoID)
-	if err := youtube.Play(ctx, videoID, timeout); err != nil {
+	if err := youtube.Play(ctx, videoID, timeout, sa.ttsFolderEntry.Text); err != nil {
 		sa.appendLog(fmt.Sprintf("[play] error: %v", err))
 	}
 }

@@ -32,7 +32,7 @@ func TestYouTube_Play(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	err := youtube.Play(ctx, "sVx1mJDeUjY", 30*time.Second)
+	err := youtube.Play(ctx, "sVx1mJDeUjY", 30*time.Second, t.TempDir())
 	if err != nil && ctx.Err() == nil {
 		t.Fatalf("Play failed: %v", err)
 	}

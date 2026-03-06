@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"sort"
@@ -203,39 +204,46 @@ func tryResolveVRAudioURL(ctx context.Context, videoID, visitorData string) (str
 	return audioFormats[0].URL, status, nil
 }
 
-// playViaYtDlp uses yt-dlp to extract and stream audio to the system player.
-// This is the fallback when the InnerTube approach fails due to bot detection,
-// since yt-dlp handles YouTube's authentication challenges internally.
-// Uses the system yt-dlp if available; otherwise falls back to the embedded binary.
-// Requests MP3 output (requires ffmpeg) for native playback via go-mp3 + oto.
-func playViaYtDlp(ctx context.Context, videoID string) error {
+// playViaYtDlp uses yt-dlp to download audio to a temp file, then plays it
+// natively via go-mp3 + oto. This avoids any external audio player dependency
+// and works cross-platform. If the file already exists in tmpDir it is played
+// from cache without re-downloading.
+// Requires ffmpeg for the -x --audio-format mp3 transcoding step.
+func playViaYtDlp(ctx context.Context, videoID, tmpDir string) error {
+	if err := os.MkdirAll(tmpDir, 0o755); err != nil {
+		return fmt.Errorf("create tmp dir: %w", err)
+	}
+
+	outPath := filepath.Join(tmpDir, videoID+".mp3")
+
+	// Play from cache if a previous download already exists.
+	if _, err := os.Stat(outPath); err == nil {
+		return playNativeFromFile(ctx, outPath)
+	}
+
 	ytdlpPath, err := ytdlp.Executable()
 	if err != nil {
 		return fmt.Errorf("yt-dlp unavailable: %w", err)
 	}
 
+	// Download and convert to MP3. yt-dlp appends .mp3 when no extension is
+	// present in the -o template, so passing the base path is intentional.
+	outBase := filepath.Join(tmpDir, videoID)
 	ytCmd := exec.CommandContext(ctx, ytdlpPath,
 		"--no-playlist",
 		"-x", "--audio-format", "mp3",
-		"-o", "-",
+		"-o", outBase,
 		"--quiet",
+		"--no-progress",
 		"https://www.youtube.com/watch?v="+videoID,
 	)
 	ytCmd.Stderr = os.Stderr
 
-	pipe, err := ytCmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("create yt-dlp pipe: %w", err)
-	}
-	if err := ytCmd.Start(); err != nil {
-		return fmt.Errorf("start yt-dlp: %w", err)
+	if err := ytCmd.Run(); err != nil {
+		return fmt.Errorf("yt-dlp: %w", err)
 	}
 
-	playerErr := playNative(ctx, pipe)
-	if waitErr := ytCmd.Wait(); waitErr != nil && playerErr == nil {
-		playerErr = waitErr
-	}
-	return playerErr
+	return playNativeFromFile(ctx, outPath)
 }
 
 /** Search queries YouTube and returns the first matching video ID. */
@@ -267,8 +275,9 @@ func Search(query string) (string, error) {
 
 /** Play streams audio for the given video ID.
  *  Primary: android_vr InnerTube client with random visitorData (retried up to maxBotRetries).
- *  Fallback: yt-dlp subprocess (when installed) for videos that require YouTube sign-in. */
-func Play(ctx context.Context, videoID string, timeout time.Duration) error {
+ *  Fallback: yt-dlp subprocess (when installed) for videos that require YouTube sign-in.
+ *  tmpDir is the folder used to cache downloaded audio files (same as the TTS folder). */
+func Play(ctx context.Context, videoID string, timeout time.Duration, tmpDir string) error {
 	playCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
@@ -278,7 +287,7 @@ func Play(ctx context.Context, videoID string, timeout time.Duration) error {
 			return err
 		}
 		// InnerTube approach exhausted; fall back to yt-dlp if available.
-		return playViaYtDlp(playCtx, videoID)
+		return playViaYtDlp(playCtx, videoID, tmpDir)
 	}
 
 	req, err := http.NewRequestWithContext(playCtx, http.MethodGet, streamURL, nil)
@@ -329,6 +338,16 @@ func pipeToPlayer(ctx context.Context, r io.Reader) error {
 	}
 
 	return fmt.Errorf("no audio player found: install ffplay or mpv")
+}
+
+// playNativeFromFile opens path and feeds it to playNative.
+func playNativeFromFile(ctx context.Context, path string) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return fmt.Errorf("open audio file: %w", err)
+	}
+	defer f.Close()
+	return playNative(ctx, f)
 }
 
 // playNative decodes an MP3 stream from r and plays it using oto/v2 without

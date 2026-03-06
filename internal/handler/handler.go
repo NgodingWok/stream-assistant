@@ -87,7 +87,7 @@ func (h *Handler) handlePlayCommand(ctx context.Context, comment string) {
 			return
 		}
 		fmt.Printf("[play] found video: %s\n", videoID)
-		if err := youtube.Play(ctx, videoID, h.cfg.PlayTimeout); err != nil {
+		if err := youtube.Play(ctx, videoID, h.cfg.PlayTimeout, h.cfg.TTSFolder); err != nil {
 			fmt.Printf("[play] playback error: %v\n", err)
 		}
 	}()
