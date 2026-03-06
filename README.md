@@ -7,7 +7,7 @@ An interactive stream assistant and CLI tool built with [Go](https://go.dev/). I
 
 - Real-time TikTok live stream monitoring with chat event processing
 - Text-to-speech playback for chat messages using [htgo-tts](https://github.com/hegedustibor/htgo-tts) with configurable language
-- YouTube audio playback via `!play <query>` chat command (requires `yt-dlp` and `ffplay`)
+- YouTube audio playback via `!play <query>` chat command using embedded Go library (requires `ffplay`, `mpv`, or `afplay` for playback)
 - User join and viewer count logging
 - Graceful shutdown via SIGINT/SIGTERM
 - Runtime configuration through environment variables
@@ -15,16 +15,33 @@ An interactive stream assistant and CLI tool built with [Go](https://go.dev/). I
 ## Prerequisites
 
 - Go 1.25+
-- `yt-dlp` — for extracting YouTube audio stream URLs
-- `ffplay` — for audio playback (part of FFmpeg)
+- One of the following audio players:
+  - `ffplay` — part of [FFmpeg](https://ffmpeg.org/) (recommended)
+  - `mpv` — cross-platform media player
+  - `afplay` — built-in on macOS
 
 ## Installation
 
 ```bash
 git clone https://github.com/NgodingWok/stream-assistant.git
 cd stream-assistant
-go build -o stream-assistant ./cmd/stream-assistant
 ```
+
+**Standard build** (requires `yt-dlp` in PATH at runtime):
+```bash
+make build
+# or
+bash scripts/build.sh
+```
+
+**Embedded build** (bundles yt-dlp into the binary, no runtime dependency):
+```bash
+make build-embedded
+# or
+bash scripts/build.sh --embedded
+```
+
+See `scripts/build.sh --help` for all build options (`--os`, `--arch`, `--version`, `--race`).
 
 ## Usage
 
@@ -56,18 +73,30 @@ internal/config/        Configuration loading from environment variables
 internal/handler/       TikTok event processing and dispatch
 internal/tts/           Text-to-speech wrapper
 internal/youtube/       YouTube search and audio streaming
+third_party/            Embedded yt-dlp binary package (build tag: embed_ytdlp)
 test/integration/       Integration tests (build tag: integration)
+scripts/                Build, test, and fetch-ytdlp shell/bat scripts
 ```
 
 ### Running Tests
 
 ```bash
 # unit tests
-go test ./...
+make test
+# or: bash scripts/test.sh --unit
 
 # integration tests (requires network and external tools)
-go test -tags=integration ./test/integration/...
+make test-integration
+# or: bash scripts/test.sh --integration
+
+# both unit and integration
+make test-all
+
+# with coverage report
+bash scripts/test.sh --unit --coverage
 ```
+
+See `scripts/test.sh --help` for all options (`--race`, `--run`, `--timeout`, `--verbose`).
 
 ## License
 

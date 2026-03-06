@@ -1,10 +1,13 @@
 # Binaries
-*.exe
-*.exe~
+# *.exe
+# *.exe~
 *.dll
 *.so
 *.dylib
 /bin/
+
+# Allow committed third-party binaries
+!third_party/bin/
 
 # Go test binary
 *.test
