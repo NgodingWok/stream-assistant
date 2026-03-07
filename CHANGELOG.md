@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+* `handler.Handler` and `streamApp` now run a single dedicated player goroutine per session (`runPlayer` state machine over a `playCh chan string` channel); a new `!play` command drains any pending request and cancels in-progress playback before starting the new one — the latest request always wins
 * Added `--embed-ffmpeg` build flag to `scripts/build.sh` and `scripts/build.bat`: embeds `ffmpeg.exe` (Windows amd64 only) into the binary using build tag `embed_ffmpeg`; composable with `--embedded` for a fully self-contained Windows binary
 * `playViaYtDlp` now passes `--ffmpeg-location <path>` to yt-dlp when `FFmpegExecutable()` resolves a path (embedded or system), eliminating the PATH requirement on Windows when using `--embed-ffmpeg`
 * Replaced stdout-pipe streaming in `playViaYtDlp` with file-based download: yt-dlp saves to `<tmpDir>/<videoID>.mp3` then plays natively via go-mp3 + oto/v2 — no external audio player required for the yt-dlp fallback path

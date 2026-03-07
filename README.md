@@ -7,7 +7,7 @@ An interactive stream assistant built with [Go](https://go.dev/). Available as a
 
 - Real-time TikTok live stream monitoring with chat event processing
 - Text-to-speech playback for chat messages using [htgo-tts](https://github.com/hegedustibor/htgo-tts) with configurable language
-- YouTube audio playback via `!play <query>` chat command; primary path uses the android_vr InnerTube client (requires `ffplay`, `mpv`, or `afplay`); yt-dlp fallback uses native go-mp3 + oto/v2 playback (requires `ffmpeg` for yt-dlp transcoding)
+- YouTube audio playback via `!play <query>` chat command; primary path uses the android_vr InnerTube client (requires `ffplay`, `mpv`, or `afplay`); yt-dlp fallback uses native go-mp3 + oto/v2 playback (requires `ffmpeg` for yt-dlp transcoding); sending a new `!play` while audio is playing cancels the current track and starts the new one
 - User join and viewer count logging
 - Graceful shutdown via SIGINT/SIGTERM (CLI) or Stop button (GUI)
 - Runtime configuration through environment variables (CLI) or settings form (GUI)
