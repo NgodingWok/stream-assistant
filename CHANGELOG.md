@@ -44,6 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+* `scripts/build.bat`: `--gui` now prefers `fyne package` (proper icon embedding and Windows manifest injection) when `fyne` is found in `PATH`; falls back to `go build` with a warning and install hint (`go install fyne.io/tools/cmd/fyne@latest`) if not; `--race --gui` always bypasses `fyne package` since it does not support the race detector
 * `handler.Handler` and `streamApp` now run a single dedicated player goroutine per session (`runPlayer` state machine over a `playCh chan string` channel); a new `!play` command drains any pending request and cancels in-progress playback before starting the new one — the latest request always wins
 * Added `--embed-ffmpeg` build flag to `scripts/build.sh` and `scripts/build.bat`: embeds `ffmpeg.exe` (Windows amd64 only) into the binary using build tag `embed_ffmpeg`; composable with `--embedded` for a fully self-contained Windows binary
 * `playViaYtDlp` now passes `--ffmpeg-location <path>` to yt-dlp when `FFmpegExecutable()` resolves a path (embedded or system), eliminating the PATH requirement on Windows when using `--embed-ffmpeg`

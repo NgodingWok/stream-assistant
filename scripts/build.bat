@@ -104,8 +104,45 @@ if not "%VERSION%"=="" echo   version  : %VERSION%
 
 for %%d in ("%OUTPUT%") do if not exist "%%~dpd" mkdir "%%~dpd"
 
-go build %RACE_FLAG% %TAGS% -ldflags="!LDFLAGS_VAL!" -o "%OUTPUT%" %PKG%
+:: When building the GUI, prefer 'fyne package' for proper icon embedding and
+:: Windows manifest injection. Fall back to plain 'go build' with a warning if
+:: fyne is not installed.
+if "%GUI%"=="1" (
+  if "%RACE%"=="1" (
+    echo warning: --race is not supported by 'fyne package' - falling back to 'go build' >&2
+    goto :build_go
+  )
+  where fyne >nul 2>&1
+  if !errorlevel! equ 0 ( goto :build_fyne )
+  echo warning: 'fyne' not found in PATH - falling back to 'go build' >&2
+  echo warning: for proper icon, manifest and packaging use 'fyne': >&2
+  echo warning:   go install fyne.io/tools/cmd/fyne@latest >&2
+)
+goto :build_go
 
+:build_fyne
+:: Build the GUI package using 'fyne package'.
+:: -release internally passes -s -w -trimpath, so no separate ldflags needed.
+set "FYNE_ARGS=-release"
+if not "!TAG_LIST!"=="" set "FYNE_ARGS=!FYNE_ARGS! -tags !TAG_LIST!"
+if not "%VERSION%"==""  set "FYNE_ARGS=!FYNE_ARGS! -app-version %VERSION%"
+if not "%GOOS%"==""     set "FYNE_ARGS=!FYNE_ARGS! -os %GOOS%"
+echo   tool     : fyne package
+fyne package !FYNE_ARGS!
 if %ERRORLEVEL% neq 0 ( echo Build failed >&2 & exit /b %ERRORLEVEL% )
+:: 'fyne package' outputs <module-last-segment>.exe in the working directory.
+:: Move it to the desired output path when it differs.
+set "FYNE_OUT=stream-assistant.exe"
+if /i not "!FYNE_OUT!"=="%OUTPUT%" (
+  move /y "!FYNE_OUT!" "%OUTPUT%" >nul
+)
+goto :build_done
+
+:build_go
+echo   tool     : go build
+go build %RACE_FLAG% %TAGS% -ldflags="!LDFLAGS_VAL!" -o "%OUTPUT%" %PKG%
+if %ERRORLEVEL% neq 0 ( echo Build failed >&2 & exit /b %ERRORLEVEL% )
+
+:build_done
 echo Done ^> %OUTPUT%
 endlocal

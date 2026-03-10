@@ -68,6 +68,15 @@ bash scripts/build.sh --gui --embedded
 
 See `scripts/build.sh --help` for all build options (`--os`, `--arch`, `--version`, `--race`).
 
+**Windows (`build.bat`)** — same flags, same defaults. When building with `--gui`, the script prefers `fyne package` (which embeds the icon and Windows manifest) if `fyne` is available in `PATH`, and falls back to `go build` with a warning if not:
+```bat
+scripts\build.bat --gui --embedded --embed-ffmpeg
+```
+To install `fyne`:
+```bat
+go install fyne.io/tools/cmd/fyne@latest
+```
+
 ## Usage
 
 ### CLI
