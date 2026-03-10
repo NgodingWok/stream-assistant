@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `scripts/build.bat`: `--version` flag now correctly passes `-ldflags` to `go build`; the previous `-ldflags=-X main.version=…` form was mis-parsed by `go build` when the value contained spaces — refactored into a separate `LDFLAGS_VAL` variable and passed as `-ldflags="…"` on a conditional branch
 * `scripts/build.bat`: `echo Done -> %OUTPUT%` at the end of the build overwrote the compiled binary with 8 bytes of text (`Done -`) because the unescaped `>` was treated as a shell redirect; fixed by escaping to `echo Done ^> %OUTPUT%`
 * `scripts/build.bat`: removed redundant no-op `set GOOS=%GOOS%` / `set GOARCH=%GOARCH%` lines that had no effect
+* `scripts/build.bat`: added `-s -w` to the base `LDFLAGS_VAL` (strip symbol table and DWARF debug info); fixes "This app can't run on your PC" error on Windows 11 for binaries produced without a version flag
 * Nil pointer dereference on startup when `live.Info` or `live.Info.Owner` is not populated after `TrackUser`; falls back to the configured username as display name
 * WebSocket connection error (`unexpected HTTP response status: 200`) when the user is not live; replaced with a pre-flight liveness check via `GetLiveRoomUserInfo` and `IsLive` before calling `TrackUser`
 * YouTube stream HTTP 403 errors caused by YouTube CDN blocking `android_sdkless` (`c=ANDROID`) signed URLs; resolved by implementing a minimal InnerTube client using the `ANDROID_VR` (`c=ANDROID_VR`) client identity which CDN accepts without restriction

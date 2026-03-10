@@ -81,9 +81,11 @@ if "%EMBED_FFMPEG%"=="1" (
 set "TAGS="
 if not "!TAG_LIST!"=="" set "TAGS=-tags !TAG_LIST!"
 
-set "LDFLAGS_VAL="
+:: -s omits the symbol table; -w omits DWARF debug info.
+:: Together they fix the "This app can't run on your PC" error on Windows 11.
+set "LDFLAGS_VAL=-s -w"
 if not "%VERSION%"=="" (
-  set "LDFLAGS_VAL=-X main.version=%VERSION%"
+  set "LDFLAGS_VAL=!LDFLAGS_VAL! -X main.version=%VERSION%"
 )
 
 set RACE_FLAG=
@@ -102,11 +104,7 @@ if not "%VERSION%"=="" echo   version  : %VERSION%
 
 for %%d in ("%OUTPUT%") do if not exist "%%~dpd" mkdir "%%~dpd"
 
-if "!LDFLAGS_VAL!"=="" (
-  go build %RACE_FLAG% %TAGS% -o "%OUTPUT%" %PKG%
-) else (
-  go build %RACE_FLAG% %TAGS% -ldflags="!LDFLAGS_VAL!" -o "%OUTPUT%" %PKG%
-)
+go build %RACE_FLAG% %TAGS% -ldflags="!LDFLAGS_VAL!" -o "%OUTPUT%" %PKG%
 
 if %ERRORLEVEL% neq 0 ( echo Build failed >&2 & exit /b %ERRORLEVEL% )
 echo Done ^> %OUTPUT%
