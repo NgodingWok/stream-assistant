@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `scripts/build.bat`: removed redundant no-op `set GOOS=%GOOS%` / `set GOARCH=%GOARCH%` lines that had no effect
 * `scripts/build.bat`: added `-s -w` to the base `LDFLAGS_VAL` (strip symbol table and DWARF debug info); fixes "This app can't run on your PC" error on Windows 11 for binaries produced without a version flag
 * Nil pointer dereference on startup when `live.Info` or `live.Info.Owner` is not populated after `TrackUser`; falls back to the configured username as display name
+* GUI crash when adding log entries (join/chat) or stopping a session; widget updates are now dispatched with `fyne.Do` to avoid nil pointer panics from background goroutines
 * WebSocket connection error (`unexpected HTTP response status: 200`) when the user is not live; replaced with a pre-flight liveness check via `GetLiveRoomUserInfo` and `IsLive` before calling `TrackUser`
 * YouTube stream HTTP 403 errors caused by YouTube CDN blocking `android_sdkless` (`c=ANDROID`) signed URLs; resolved by implementing a minimal InnerTube client using the `ANDROID_VR` (`c=ANDROID_VR`) client identity which CDN accepts without restriction
 
