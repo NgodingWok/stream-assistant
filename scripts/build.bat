@@ -30,14 +30,14 @@ set RACE=0
 
 :parse
 if "%~1"=="" goto :build
-if /i "%~1"=="--gui"          ( set GUI=1 & shift & goto :parse )
-if /i "%~1"=="--embedded"     ( set EMBED=1 & shift & goto :parse )
-if /i "%~1"=="--embed-ffmpeg" ( set EMBED_FFMPEG=1 & shift & goto :parse )
-if /i "%~1"=="--output"    ( set OUTPUT=%~2 & shift & shift & goto :parse )
-if /i "%~1"=="--os"        ( set GOOS=%~2 & shift & shift & goto :parse )
-if /i "%~1"=="--arch"      ( set GOARCH=%~2 & shift & shift & goto :parse )
-if /i "%~1"=="--version"   ( set VERSION=%~2 & shift & shift & goto :parse )
-if /i "%~1"=="--race"      ( set RACE=1 & shift & goto :parse )
+if /i "%~1"=="--gui"          ( set "GUI=1" & shift & goto :parse )
+if /i "%~1"=="--embedded"     ( set "EMBED=1" & shift & goto :parse )
+if /i "%~1"=="--embed-ffmpeg" ( set "EMBED_FFMPEG=1" & shift & goto :parse )
+if /i "%~1"=="--output"    ( set "OUTPUT=%~2" & shift & shift & goto :parse )
+if /i "%~1"=="--os"        ( set "GOOS=%~2" & shift & shift & goto :parse )
+if /i "%~1"=="--arch"      ( set "GOARCH=%~2" & shift & shift & goto :parse )
+if /i "%~1"=="--version"   ( set "VERSION=%~2" & shift & shift & goto :parse )
+if /i "%~1"=="--race"      ( set "RACE=1" & shift & goto :parse )
 if /i "%~1"=="--help"      ( goto :usage )
 echo Unknown option: %~1 >&2
 exit /b 1
@@ -58,39 +58,36 @@ echo   --help            Show this message
 exit /b 0
 
 :build
-set PKG=.\cmd\stream-assistant\
-set LABEL=stream-assistant
-if "%GUI%"=="1" ( set PKG=. & set LABEL=stream-assistant-gui )
-if "%OUTPUT%"=="" set OUTPUT=bin\%LABEL%.exe
+set "PKG=.\cmd\stream-assistant\"
+set "LABEL=stream-assistant"
+if "%GUI%"=="1" ( set "PKG=." & set "LABEL=stream-assistant-gui" )
+if "%OUTPUT%"=="" set "OUTPUT=bin\%LABEL%.exe"
 
-set TAG_LIST=
+set "TAG_LIST="
 if "%EMBED%"=="1" (
   if not exist "third_party\bin" (
     echo error: third_party\bin\ not found - run scripts\fetch-ytdlp.bat first >&2
     exit /b 1
   )
-  set TAG_LIST=embed_ytdlp
+  set "TAG_LIST=embed_ytdlp"
 )
 if "%EMBED_FFMPEG%"=="1" (
   if not exist "third_party\bin\ffmpeg.exe" (
     echo error: third_party\bin\ffmpeg.exe not found - run scripts\fetch-ffmpeg.bat first >&2
     exit /b 1
   )
-  if "!TAG_LIST!"=="" ( set TAG_LIST=embed_ffmpeg ) else ( set TAG_LIST=!TAG_LIST!,embed_ffmpeg )
+  if "!TAG_LIST!"=="" ( set "TAG_LIST=embed_ffmpeg" ) else ( set "TAG_LIST=!TAG_LIST!,embed_ffmpeg" )
 )
-set TAGS=
-if not "!TAG_LIST!"=="" set TAGS=-tags !TAG_LIST!
+set "TAGS="
+if not "!TAG_LIST!"=="" set "TAGS=-tags !TAG_LIST!"
 
-set LDFLAGS=
+set "LDFLAGS_VAL="
 if not "%VERSION%"=="" (
-  set LDFLAGS=-ldflags=-X main.version=%VERSION%
+  set "LDFLAGS_VAL=-X main.version=%VERSION%"
 )
 
 set RACE_FLAG=
-if "%RACE%"=="1" set RACE_FLAG=-race
-
-if not "%GOOS%"==""   set GOOS=%GOOS%
-if not "%GOARCH%"=="" set GOARCH=%GOARCH%
+if "%RACE%"=="1" set "RACE_FLAG=-race"
 
 echo Building %LABEL%...
 echo   gui          : %GUI%
@@ -105,8 +102,12 @@ if not "%VERSION%"=="" echo   version  : %VERSION%
 
 for %%d in ("%OUTPUT%") do if not exist "%%~dpd" mkdir "%%~dpd"
 
-go build %RACE_FLAG% %TAGS% %LDFLAGS% -o "%OUTPUT%" %PKG%
+if "!LDFLAGS_VAL!"=="" (
+  go build %RACE_FLAG% %TAGS% -o "%OUTPUT%" %PKG%
+) else (
+  go build %RACE_FLAG% %TAGS% -ldflags="!LDFLAGS_VAL!" -o "%OUTPUT%" %PKG%
+)
 
 if %ERRORLEVEL% neq 0 ( echo Build failed >&2 & exit /b %ERRORLEVEL% )
-echo Done -> %OUTPUT%
+echo Done ^> %OUTPUT%
 endlocal
