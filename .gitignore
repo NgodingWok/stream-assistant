@@ -5,6 +5,7 @@
 *.so
 *.dylib
 /bin/
+Stream Assistant.exe
 
 # Allow committed third-party binaries
 !third_party/bin/
