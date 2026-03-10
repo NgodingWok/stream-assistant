@@ -1,0 +1,8 @@
+Website = "https://github.com/ngodingwok/stream-assistant"
+
+[Details]
+Icon = "Icon.png"
+Name = "Stream Assistant"
+ID = "io.ngodingwok.stream-assistant"
+Version = "1.0.0"
+Build = 7
