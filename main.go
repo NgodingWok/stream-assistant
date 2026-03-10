@@ -177,11 +177,13 @@ func (sa *streamApp) runSession(ctx context.Context, username string) {
 		sa.running = false
 		sa.mu.Unlock()
 
-		sa.startStopBtn.SetText("Start")
-		sa.startStopBtn.Importance = widget.HighImportance
-		sa.startStopBtn.Refresh()
-		sa.setFormEnabled(true)
 		_ = sa.viewerCount.Set("—")
+		fyne.Do(func() {
+			sa.startStopBtn.SetText("Start")
+			sa.startStopBtn.Importance = widget.HighImportance
+			sa.startStopBtn.Refresh()
+			sa.setFormEnabled(true)
+		})
 	}()
 
 	sa.appendLog("▶ Starting session for @" + username)
@@ -381,7 +383,9 @@ func (sa *streamApp) appendLog(msg string) {
 	}
 	if sa.logList != nil {
 		if n := sa.logEntries.Length(); n > 0 {
-			sa.logList.ScrollTo(n - 1)
+			fyne.Do(func() {
+				sa.logList.ScrollTo(n - 1)
+			})
 		}
 	}
 }
